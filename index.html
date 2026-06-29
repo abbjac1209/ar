@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>AR</title>
+<title>Sticker AR</title>
 
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
@@ -31,7 +31,7 @@ bottom:20px;
 left:10px;
 right:10px;
 color:white;
-background:rgba(0,0,0,0.55);
+background:rgba(0,0,0,0.6);
 padding:10px;
 text-align:center;
 border-radius:10px;
@@ -43,10 +43,10 @@ font-size:15px;
 <body>
 
 <button id="startButton">Start AR</button>
-<div id="msg">Tap start, then point at the photo</div>
+<div id="msg">Tap Start AR</div>
 
 <a-scene
-mindar-image="imageTargetSrc: targets.mind; filterMinCF:0.001; filterBeta:0.01;"
+mindar-image="imageTargetSrc: targets.mind; autoStart: false;"
 color-space="sRGB"
 renderer="colorManagement: true, physicallyCorrectLights"
 vr-mode-ui="enabled:false"
@@ -59,46 +59,12 @@ device-orientation-permission-ui="enabled:false">
 <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
 <a-entity id="target" mindar-image-target="targetIndex: 0">
-
-  <!-- soft golden glow -->
-  <a-plane
-    width="1.08"
-    height="0.72"
-    position="0 0 0.01"
-    material="color:#ffd700; opacity:0.18; transparent:true">
-  </a-plane>
-
-  <!-- main video -->
-  <a-video id="portraitVideo"
+  <a-video
     src="#video"
     width="1"
     height="0.65"
-    position="0 0 0.03"
-    material="transparent:true; opacity:0.96">
+    position="0 0 0.03">
   </a-video>
-
-  <!-- simple sparkles -->
-  <a-text
-    value="✨"
-    position="-0.45 0.25 0.05"
-    scale="0.35 0.35 0.35"
-    animation="property: position; to: -0.45 0.32 0.05; dir: alternate; dur: 1200; loop: true">
-  </a-text>
-
-  <a-text
-    value="✨"
-    position="0.42 -0.25 0.05"
-    scale="0.30 0.30 0.30"
-    animation="property: position; to: 0.42 -0.18 0.05; dir: alternate; dur: 1500; loop: true">
-  </a-text>
-
-  <a-text
-    value="💫"
-    position="0.38 0.25 0.05"
-    scale="0.25 0.25 0.25"
-    animation="property: rotation; to: 0 0 360; dur: 2500; loop: true">
-  </a-text>
-
 </a-entity>
 
 </a-scene>
@@ -107,28 +73,32 @@ device-orientation-permission-ui="enabled:false">
 const startButton = document.getElementById("startButton");
 const msg = document.getElementById("msg");
 const video = document.getElementById("video");
+const sceneEl = document.querySelector("a-scene");
 const target = document.getElementById("target");
 
 startButton.addEventListener("click", async () => {
+  msg.innerText = "Starting camera...";
   startButton.style.display = "none";
-  msg.innerText = "Camera loading. Please allow camera access.";
 
   try {
-    await video.play();
-    video.pause();
-  } catch (e) {}
-
-  msg.innerText = "Point camera at the photo";
+    const arSystem = sceneEl.systems["mindar-image-system"];
+    await arSystem.start();
+    msg.innerText = "Point camera at the sticker";
+  } catch (err) {
+    msg.innerText = "Camera failed. Please allow camera permission and use Chrome.";
+    startButton.style.display = "block";
+    console.error(err);
+  }
 });
 
 target.addEventListener("targetFound", () => {
-  msg.innerText = "Photo detected ❤️";
+  msg.innerText = "Sticker detected!";
   video.currentTime = 0;
   video.play();
 });
 
 target.addEventListener("targetLost", () => {
-  msg.innerText = "Point camera at the photo";
+  msg.innerText = "Point camera at the sticker";
   video.pause();
 });
 </script>
