@@ -2,40 +2,22 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Sticker AR</title>
+<title>AR Gallery</title>
 
 <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
 <style>
 body { margin:0; overflow:hidden; background:black; font-family:Arial; }
-
 #startButton {
-position:fixed;
-z-index:9999;
-top:50%;
-left:50%;
+position:fixed; z-index:9999; top:50%; left:50%;
 transform:translate(-50%,-50%);
-padding:16px 28px;
-font-size:20px;
-border-radius:14px;
-border:none;
-background:white;
-color:black;
+padding:16px 28px; font-size:20px; border-radius:14px; border:none;
 }
-
 #msg {
-position:fixed;
-z-index:9999;
-bottom:20px;
-left:10px;
-right:10px;
-color:white;
-background:rgba(0,0,0,0.6);
-padding:10px;
-text-align:center;
-border-radius:10px;
-font-size:15px;
+position:fixed; z-index:9999; bottom:20px; left:10px; right:10px;
+color:white; background:rgba(0,0,0,0.6);
+padding:10px; text-align:center; border-radius:10px;
 }
 </style>
 </head>
@@ -46,25 +28,25 @@ font-size:15px;
 <div id="msg">Tap Start AR</div>
 
 <a-scene
-mindar-image="imageTargetSrc: targets.mind; autoStart: false;"
+mindar-image="imageTargetSrc: targets.mind;"
 color-space="sRGB"
 renderer="colorManagement: true, physicallyCorrectLights"
 vr-mode-ui="enabled:false"
 device-orientation-permission-ui="enabled:false">
 
 <a-assets>
-<video id="video" src="overlay.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+<video id="stickerVideo" src="sticker.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
+<video id="lineVideo" src="line.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
 </a-assets>
 
 <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
-<a-entity id="target" mindar-image-target="targetIndex: 0">
-  <a-video
-    src="#video"
-    width="1"
-    height="0.65"
-    position="0 0 0.03">
-  </a-video>
+<a-entity id="stickerTarget" mindar-image-target="targetIndex: 0">
+<a-video src="#stickerVideo" width="1" height="0.65" position="0 0 0.03"></a-video>
+</a-entity>
+
+<a-entity id="lineTarget" mindar-image-target="targetIndex: 1">
+<a-video src="#lineVideo" width="1" height="0.65" position="0 0 0.03"></a-video>
 </a-entity>
 
 </a-scene>
@@ -72,34 +54,41 @@ device-orientation-permission-ui="enabled:false">
 <script>
 const startButton = document.getElementById("startButton");
 const msg = document.getElementById("msg");
-const video = document.getElementById("video");
-const sceneEl = document.querySelector("a-scene");
-const target = document.getElementById("target");
+
+const stickerVideo = document.getElementById("stickerVideo");
+const lineVideo = document.getElementById("lineVideo");
+
+const stickerTarget = document.getElementById("stickerTarget");
+const lineTarget = document.getElementById("lineTarget");
 
 startButton.addEventListener("click", async () => {
-  msg.innerText = "Starting camera...";
   startButton.style.display = "none";
-
-  try {
-    const arSystem = sceneEl.systems["mindar-image-system"];
-    await arSystem.start();
-    msg.innerText = "Point camera at the sticker";
-  } catch (err) {
-    msg.innerText = "Camera failed. Please allow camera permission and use Chrome.";
-    startButton.style.display = "block";
-    console.error(err);
-  }
+  msg.innerText = "Camera loading. Please allow camera access.";
+  msg.innerText = "Point camera at Sticker or LINE picture";
 });
 
-target.addEventListener("targetFound", () => {
-  msg.innerText = "Sticker detected!";
-  video.currentTime = 0;
-  video.play();
+stickerTarget.addEventListener("targetFound", () => {
+  msg.innerText = "Sticker detected";
+  lineVideo.pause();
+  stickerVideo.currentTime = 0;
+  stickerVideo.play();
 });
 
-target.addEventListener("targetLost", () => {
-  msg.innerText = "Point camera at the sticker";
-  video.pause();
+stickerTarget.addEventListener("targetLost", () => {
+  stickerVideo.pause();
+  msg.innerText = "Point camera at Sticker or LINE picture";
+});
+
+lineTarget.addEventListener("targetFound", () => {
+  msg.innerText = "LINE detected";
+  stickerVideo.pause();
+  lineVideo.currentTime = 0;
+  lineVideo.play();
+});
+
+lineTarget.addEventListener("targetLost", () => {
+  lineVideo.pause();
+  msg.innerText = "Point camera at Sticker or LINE picture";
 });
 </script>
 
