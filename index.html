@@ -9,33 +9,16 @@
 
 <style>
 body { margin:0; overflow:hidden; background:black; font-family:Arial; }
-
 #startButton {
-position:fixed;
-z-index:9999;
-top:50%;
-left:50%;
+position:fixed; z-index:9999; top:50%; left:50%;
 transform:translate(-50%,-50%);
-padding:16px 28px;
-font-size:20px;
-border-radius:14px;
-border:none;
-background:white;
-color:black;
+padding:16px 28px; font-size:20px; border-radius:14px; border:none;
+background:white; color:black;
 }
-
 #msg {
-position:fixed;
-z-index:9999;
-bottom:20px;
-left:10px;
-right:10px;
-color:white;
-background:rgba(0,0,0,0.6);
-padding:10px;
-text-align:center;
-border-radius:10px;
-font-size:15px;
+position:fixed; z-index:9999; bottom:20px; left:10px; right:10px;
+color:white; background:rgba(0,0,0,0.6);
+padding:10px; text-align:center; border-radius:10px; font-size:15px;
 }
 </style>
 </head>
@@ -52,86 +35,93 @@ renderer="colorManagement: true, physicallyCorrectLights"
 vr-mode-ui="enabled:false"
 device-orientation-permission-ui="enabled:false">
 
-<a-assets>
-<video id="lineVideo" src="line.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
-<video id="stickerVideo" src="sticker.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
-<video id="logoVideo" src="logo.mp4" preload="auto" loop muted playsinline webkit-playsinline></video>
-</a-assets>
+<a-assets id="assets"></a-assets>
 
 <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
 
-<a-entity id="lineTarget" mindar-image-target="targetIndex: 0">
-<a-video src="#lineVideo" width="1" height="0.65" position="0 0 0.03"></a-video>
-</a-entity>
-
-<a-entity id="stickerTarget" mindar-image-target="targetIndex: 1">
-<a-video src="#stickerVideo" width="1" height="0.65" position="0 0 0.03"></a-video>
-</a-entity>
-
-<a-entity id="logoTarget" mindar-image-target="targetIndex: 2">
-<a-video src="#logoVideo" width="1" height="0.65" position="0 0 0.03"></a-video>
-</a-entity>
+<a-entity id="targetsContainer"></a-entity>
 
 </a-scene>
 
 <script>
+const gallery = [
+  { label: "00", video: "00.mp4" },
+  { label: "01", video: "01.mp4" },
+  { label: "02", video: "02.mp4" },
+  { label: "03", video: "03.mp4" },
+  { label: "04", video: "04.mp4" },
+  { label: "05", video: "05.mp4" },
+  { label: "06", video: "06.mp4" },
+  { label: "07", video: "07.mp4" },
+  { label: "08", video: "08.mp4" },
+  { label: "09", video: "09.mp4" },
+  { label: "10", video: "10.mp4" },
+  { label: "11", video: "11.mp4" },
+  { label: "12", video: "12.mp4" },
+  { label: "13", video: "13.mp4" },
+  { label: "14", video: "14.mp4" },
+  { label: "15", video: "15.mp4" },
+  { label: "16", video: "16.mp4" },
+  { label: "17", video: "17.mp4" },
+  { label: "18", video: "18.mp4" },
+  { label: "19", video: "19.mp4" },
+  { label: "20", video: "20.mp4" },
+  { label: "LINE", video: "line.mp4" },
+  { label: "STICKER", video: "sticker.mp4" }
+];
+
 const startButton = document.getElementById("startButton");
 const msg = document.getElementById("msg");
+const assets = document.getElementById("assets");
+const targetsContainer = document.getElementById("targetsContainer");
 
-const lineVideo = document.getElementById("lineVideo");
-const stickerVideo = document.getElementById("stickerVideo");
-const logoVideo = document.getElementById("logoVideo");
+const videos = [];
 
-const lineTarget = document.getElementById("lineTarget");
-const stickerTarget = document.getElementById("stickerTarget");
-const logoTarget = document.getElementById("logoTarget");
+gallery.forEach((item, index) => {
+  const video = document.createElement("video");
+  video.setAttribute("id", "video" + index);
+  video.setAttribute("src", item.video);
+  video.setAttribute("preload", "auto");
+  video.setAttribute("loop", "");
+  video.setAttribute("muted", "");
+  video.setAttribute("playsinline", "");
+  video.setAttribute("webkit-playsinline", "");
+  assets.appendChild(video);
+  videos.push(video);
+
+  const target = document.createElement("a-entity");
+  target.setAttribute("id", "target" + index);
+  target.setAttribute("mindar-image-target", "targetIndex: " + index);
+
+  const arVideo = document.createElement("a-video");
+  arVideo.setAttribute("src", "#video" + index);
+  arVideo.setAttribute("width", "1");
+  arVideo.setAttribute("height", "0.65");
+  arVideo.setAttribute("position", "0 0 0.03");
+
+  target.appendChild(arVideo);
+  targetsContainer.appendChild(target);
+
+  target.addEventListener("targetFound", () => {
+    pauseAllVideos();
+    msg.innerText = item.label + " detected";
+    video.currentTime = 0;
+    video.play();
+  });
+
+  target.addEventListener("targetLost", () => {
+    video.pause();
+    msg.innerText = "Point camera at any AR picture";
+  });
+});
 
 function pauseAllVideos() {
-  lineVideo.pause();
-  stickerVideo.pause();
-  logoVideo.pause();
+  videos.forEach(v => v.pause());
 }
 
-startButton.addEventListener("click", async () => {
+startButton.addEventListener("click", () => {
   startButton.style.display = "none";
-  msg.innerText = "Camera loading. Please allow camera access.";
-  msg.innerText = "Point camera at the object";
-});
-
-lineTarget.addEventListener("targetFound", () => {
-  msg.innerText = "LINE detected";
-  pauseAllVideos();
-  lineVideo.currentTime = 0;
-  lineVideo.play();
-});
-
-lineTarget.addEventListener("targetLost", () => {
-  lineVideo.pause();
-  msg.innerText = "Point camera at the object";
-});
-
-stickerTarget.addEventListener("targetFound", () => {
-  msg.innerText = "Sticker detected";
-  pauseAllVideos();
-  stickerVideo.currentTime = 0;
-  stickerVideo.play();
-});
-
-stickerTarget.addEventListener("targetLost", () => {
-  stickerVideo.pause();
-  msg.innerText = "Point camera at the object";
-});
-
-logoTarget.addEventListener("targetFound", () => {
-  msg.innerText = "Logo detected";
-  pauseAllVideos();
-  logoVideo.currentTime = 0;
-  logoVideo.play();
-});
-
-logoTarget.addEventListener("targetLost", () => {
-  logoVideo.pause();
-  msg.innerText = "Point camera at the object";
+  msg.innerText = "Point camera at any AR picture";
 });
 </script>
 
